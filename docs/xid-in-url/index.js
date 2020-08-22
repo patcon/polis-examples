@@ -27,7 +27,6 @@ function setXid (xid) {
   } else {
     messageElem.innerHTML = getMessage('success');
     attachPolis(xid);
-    document.getElementById('polis-container').style.display = 'block';
   }
 }
 
