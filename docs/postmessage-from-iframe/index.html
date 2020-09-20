@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <style>
+      .container {
+        display: flex;
+      }
+
+      .container > .polis {
+        width: 50%;
+      }
+
+      .container > .data {
+        margin-left: 25px;
+      }
+
+      ul {
+        list-style: none;
+      }
+
+      ul#post-messages > li {
+        font-family: monospace;
+        white-space: pre;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="polis" data-conversation_id="43hmhaj9vm"></div>
+      <div class="data">
+        <h2>postMessages from iframe</h2>
+        <p>Try resizing window, voting, and submitting new comments.</p>
+        <ul id="post-messages"></ul>
+      </div>
+    </div>
+
+    <script async src="https://pol.is/embed.js"></script>
+    <script type="text/javascript">
+      window.addEventListener('message', function (event) {
+        var data = event.data || {};
+        if (!event.origin.match(/pol.is$/)) {
+          return;
+        }
+        var listEl = document.getElementById('post-messages');
+        var listItemEl = document.createElement('li')
+        listItemEl.innerHTML = JSON.stringify(data, null, 2);
+        listEl.appendChild(listItemEl);
+      })
+    </script>
+  </body>
+</html>
