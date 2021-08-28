@@ -1,0 +1,106 @@
+---
+---
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>SPA SDK Sample</title>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+    <style>
+      .hidden {
+        display: none;
+      }
+
+      label {
+        margin-bottom: 10px;
+        display: block;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>SPA Authentication Sample</h2>
+    <p>Welcome to our page!</p>
+
+    <button id="btn-login" disabled="true" onclick="login()">Log in</button>
+    <button id="btn-logout" disabled="true" onclick="logout()">Log out</button>
+
+    <div class="hidden" id="gated-content">
+      <p>
+        You're seeing this content because you're currently
+        <strong>logged in</strong>.
+      </p>
+      <label>
+        Access token:
+        <pre id="ipt-access-token"></pre>
+      </label>
+      <label>
+        User profile:
+        <pre id="ipt-user-profile"></pre>
+      </label>
+    </div>
+
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
+    <script>
+      let auth0 = null;
+      const fetchAuthConfig = () => fetch("./auth_config.json");
+      const configureClient = async () => {
+        const response = await fetchAuthConfig();
+        const config = await response.json();
+
+        console.log(config)
+        auth0 = await createAuth0Client({
+          domain: config.domain,
+          client_id: config.clientId,
+          redirect_uri: "{{ site.url }}{{ page.url }}",
+        });
+      };
+
+      const updateUI = async () => {
+        const isAuthenticated = await auth0.isAuthenticated();
+
+        document.getElementById("btn-logout").disabled = !isAuthenticated;
+        document.getElementById("btn-login").disabled = isAuthenticated;
+
+        if (isAuthenticated) {
+          document.getElementById("gated-content").classList.remove("hidden");
+        } else {
+          document.getElementById("gated-content").classList.add("hidden");
+        }
+      };
+
+
+      const login = async () => {
+        const redirectUri = "{{ site.url }}{{ page.url }}";
+        await auth0.loginWithRedirect({
+          redirect_uri: redirectUri,
+        });
+      };
+
+      const logout = () => {
+        const redirectUri = "{{ site.url }}{{ page.url }}";
+        auth0.logout({
+          returnTo: redirectUri,
+        });
+      };
+
+      window.onload = async () => {
+        await configureClient();
+        updateUI();
+
+        const isAuthenticated = await auth0.isAuthenticated();
+
+        if (isAuthenticated) {
+          return;
+        }
+
+        const query = window.location.search;
+        if (query.includes("code=") && query.includes("state=")) {
+          await auth0.handleRedirectCallback();
+          updateUI();
+          window.history.replaceState({}, document.title, "{{ page.url }}");
+        }
+      }
+    </script>
+  </body>
+</html>
