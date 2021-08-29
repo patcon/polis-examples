@@ -30,12 +30,12 @@
         <strong>logged in</strong>.
       </p>
       <label>
-        Access token:
-        <pre id="ipt-access-token"></pre>
-      </label>
-      <label>
         User profile:
         <pre id="ipt-user-profile"></pre>
+      </label>
+      <label>
+        Polis Conversation:
+        <div id="polis-container"></div>
       </label>
     </div>
 
@@ -50,7 +50,7 @@
         auth0 = await createAuth0Client({
           domain: config.domain,
           client_id: config.clientId,
-          redirect_uri: "{{ site.url }}{{ page.url }}",
+          redirect_uri: "{{ site.url }}{{ site.baseurl }}{{ page.url }}",
         });
       };
 
@@ -61,11 +61,10 @@
         document.getElementById("btn-login").disabled = isAuthenticated;
 
         if (isAuthenticated) {
+          const auth0User = await auth0.getUser();
           document.getElementById("gated-content").classList.remove("hidden");
-          document.getElementById("ipt-access-token").innerHTML = await auth0.getTokenSilently();
-          document.getElementById("ipt-user-profile").textContent = JSON.stringify(
-            await auth0.getUser()
-          );
+          document.getElementById("ipt-user-profile").textContent = JSON.stringify(auth0User);
+          attachPolis(auth0User.sub, auth0User.name, auth0User.picture);
         } else {
           document.getElementById("gated-content").classList.add("hidden");
         }
@@ -73,18 +72,39 @@
 
 
       const login = async () => {
-        const redirectUri = "{{ site.url }}{{ page.url }}";
+        const redirectUri = "{{ site.url }}{{ site.baseurl }}{{ page.url }}";
         await auth0.loginWithRedirect({
           redirect_uri: redirectUri,
         });
       };
 
       const logout = () => {
-        const redirectUri = "{{ site.url }}{{ page.url }}";
+        const redirectUri = "{{ site.url }}{{ site.baseurl }}{{ page.url }}";
         auth0.logout({
           returnTo: redirectUri,
         });
       };
+
+      const POLIS_CONVO_ID = '43hmhaj9vm';
+      const POLIS_SERVER_URL = 'https://pol.is';
+      function attachPolis (xid, userName, userAvatar) {
+        let polisContainer = document.getElementById('polis-container');
+        let polisHtml = `<div
+          class="polis"
+          data-conversation_id="${POLIS_CONVO_ID}"
+          data-xid="${xid}"
+          data-x_name="${userName}"
+          data-x_profile_image_url="${userAvatar}"
+        ></div>`
+
+        let embedScript = document.createElement('script');
+        embedScript.src = POLIS_SERVER_URL + '/embed.js';
+        embedScript.type = 'text/javascript';
+        embedScript.async = true;
+
+        polisContainer.innerHTML = polisHtml;
+        polisContainer.appendChild(embedScript);
+      }
 
       window.onload = async () => {
         await configureClient();
