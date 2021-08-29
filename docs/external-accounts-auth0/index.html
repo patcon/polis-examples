@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>SPA SDK Sample</title>
+    <title>External Polis Authentication with Auth0</title>
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
     <style>
       .hidden {
@@ -19,8 +19,7 @@
   </head>
 
   <body>
-    <h2>SPA Authentication Sample</h2>
-    <p>Welcome to our page!</p>
+    <h2>External Polis Authentication with Auth0</h2>
 
     <button id="btn-login" disabled="true" onclick="login()">Log in</button>
     <button id="btn-logout" disabled="true" onclick="logout()">Log out</button>
@@ -48,7 +47,6 @@
         const response = await fetchAuthConfig();
         const config = await response.json();
 
-        console.log(config)
         auth0 = await createAuth0Client({
           domain: config.domain,
           client_id: config.clientId,
@@ -64,6 +62,10 @@
 
         if (isAuthenticated) {
           document.getElementById("gated-content").classList.remove("hidden");
+          document.getElementById("ipt-access-token").innerHTML = await auth0.getTokenSilently();
+          document.getElementById("ipt-user-profile").textContent = JSON.stringify(
+            await auth0.getUser()
+          );
         } else {
           document.getElementById("gated-content").classList.add("hidden");
         }
